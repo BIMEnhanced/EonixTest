@@ -1,5 +1,4 @@
-﻿using TestEonixDressage.Events;
-using TestEonixDressage.Models;
+﻿using TestEonixDressage.Models;
 
 namespace TestEonixDressage
 {
@@ -16,7 +15,8 @@ namespace TestEonixDressage
             //Subscribe the spectator to every monkey tour executed event
             foreach (TrainerModel trainer in trainers)
             {
-                trainer.Monkey.TourExecuted += spectator.OnTourExecuted;
+                //trainer.Monkey.Subscribe(spectator);
+                spectator.Subscribe(trainer.Monkey);
             }
 
             //Ask trainers to make monkeys perform their tricks

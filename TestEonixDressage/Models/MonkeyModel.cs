@@ -1,12 +1,15 @@
-﻿using TestEonixDressage.Events;
+﻿using System;
+using TestEonixDressage.Events;
 
 namespace TestEonixDressage.Models
 {
     /// <summary>
     /// Class to store the monkey infos
     /// </summary>
-    internal class MonkeyModel
+    internal class MonkeyModel : IObservable<TourExecutedEventArgs>
     {
+        private HashSet<IObserver<TourExecutedEventArgs>> _observers = new ();
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -16,6 +19,32 @@ namespace TestEonixDressage.Models
         {
             Name = name;
             Tricks = tricks;
+        }
+
+        public IDisposable Subscribe(IObserver<TourExecutedEventArgs> observer)
+        {
+            _observers.Add(observer);
+            return new Unsubscriber(_observers, observer);
+        }
+
+        private class Unsubscriber : IDisposable
+        {
+            private readonly HashSet<IObserver<TourExecutedEventArgs>> _observers;
+            private readonly IObserver<TourExecutedEventArgs> _observer;
+
+            public Unsubscriber(HashSet<IObserver<TourExecutedEventArgs>> observers, IObserver<TourExecutedEventArgs> observer)
+            {
+                _observers = observers;
+                _observer = observer;
+            }
+
+            public void Dispose()
+            {
+                if (_observers.Contains(_observer))
+                {
+                    _observers.Remove(_observer);
+                }
+            }
         }
 
         /// <summary>
@@ -34,20 +63,16 @@ namespace TestEonixDressage.Models
         public void ExecuteTrick(TrickModel trick)
         {
             Console.WriteLine($"{Name} exécute le tour {trick.Name}");
-            OnTourExecuted(new TourExecutedEventArgs(trick, Name));
+            NotifyObservers(new TourExecutedEventArgs(trick, Name));
+
+        }
+        private void NotifyObservers(TourExecutedEventArgs e)
+        {
+            foreach (var observer in _observers)
+            {
+                observer.OnNext(e);
+            }
         }
 
-        /// <summary>
-        /// Handle for the TourExecuted event
-        /// </summary>
-        public event EventHandler<TourExecutedEventArgs> TourExecuted;
-        /// <summary>
-        /// Invoke the TourExecuted
-        /// </summary>
-        /// <param name="e">TourExecutedEventArgs</param>
-        protected virtual void OnTourExecuted(TourExecutedEventArgs e)
-        {
-            TourExecuted?.Invoke(this, e);
-        }
     }
 }

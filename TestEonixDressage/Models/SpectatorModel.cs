@@ -5,14 +5,34 @@ namespace TestEonixDressage.Models
     /// <summary>
     /// Class to store the data for the spectator
     /// </summary>
-    internal class SpectatorModel
+    internal class SpectatorModel : IObserver<TourExecutedEventArgs>
     {
+
+        private IDisposable unsubscriber; // Used to unsubscribe from the observable
+
+        /// <summary>
+        /// Subscribe to the observable (MonkeyModel)
+        /// </summary>
+        /// <param name="observable"></param>
+        public void Subscribe(MonkeyModel observable)
+        {
+            unsubscriber = observable.Subscribe(this);
+        }
+
+        /// <summary>
+        /// Unsubscribe from the observable
+        /// </summary>
+        public void Unsubscribe()
+        {
+            unsubscriber.Dispose();
+        }
+
         /// <summary>
         /// Define how the spectator will react to a monkey trick
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OnTourExecuted(object sender, TourExecutedEventArgs e)
+        public void OnNext(TourExecutedEventArgs e)
         {
             if (e.Trick.TrickType == TrickTypeEnum.Accrobatie)
             {
@@ -41,5 +61,9 @@ namespace TestEonixDressage.Models
         {
             Console.WriteLine($"Spectateur siffle pendant le tour {trick} du singe {monkeyName}");
         }
+
+        // Implementing IObserver interface
+        public void OnCompleted() { }
+        public void OnError(Exception error) { }
     }
 }
